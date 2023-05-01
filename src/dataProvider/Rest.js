@@ -105,6 +105,16 @@ const RestProvider = {
 			...options,
 		}).then(({ json }) => ({ data: json }));
 	},
+	customRequest: (method, url, params) => {
+		const customOptions = {
+			method,
+			...params,
+			...options,
+		};
+		return httpClient(`${apiUrl}/${url}`, customOptions).then(({ json }) => ({
+			data: json,
+		}));
+	},
 };
 
 export default RestProvider;

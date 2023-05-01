@@ -151,6 +151,10 @@ const SignupPage = () => {
 			await authProvider
 				.signup(data)
 				.then(() => {
+					notify("Account created successfully", {
+						type: "success",
+						anchorOrigin: { vertical: "top", horizontal: "right" },
+					});
 					navigate("/login", { replace: true });
 					return;
 				})
