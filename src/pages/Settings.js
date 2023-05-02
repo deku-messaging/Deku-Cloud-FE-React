@@ -507,8 +507,8 @@ export const Setting = () => {
 							</Grid>
 						</Grid>
 						<Divider />
-						<Grid container spacing={2}>
-							<Grid item xs={4} mx={"auto"} mt={5}>
+						<Grid container justifyContent="center" sx={{ marginTop: "50px" }}>
+							<Grid item xs={12} sm={6} md={4}>
 								<DeleteUserButton />
 							</Grid>
 						</Grid>
