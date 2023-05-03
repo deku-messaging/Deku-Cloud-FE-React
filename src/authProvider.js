@@ -1,109 +1,101 @@
-const options = {
-	credentials: "include", // include, *same-origin, omit
-	headers: new Headers({
-		"Accept": "application/json",
-		"Content-Type": "application/json",
-	}),
+const headers = {
+	"Accept": "application/json",
+	"Content-Type": "application/json",
 };
+const apiUrl = process.env.REACT_APP_API_URL;
+
+async function getFullName(user) {
+	const { first_name, last_name } = user;
+	return `${first_name || ""}${first_name && last_name ? " " : ""}${
+		last_name || ""
+	}`;
+}
 
 export const AuthProvider = {
-	// called when the user attempts to log in
-	login: ({ email, password }) => {
-		const request = new Request(`${process.env.REACT_APP_API_URL}/login`, {
+	async login({ email, password }) {
+		const response = await fetch(`${apiUrl}/login`, {
 			method: "POST",
+			credentials: "include",
+			headers,
 			body: JSON.stringify({ email, password }),
-			...options,
 		});
-		return fetch(request)
-			.then((response) => {
-				if (response.status < 200 || response.status >= 300) {
-					throw response;
-				}
 
-				return response.text();
-			})
-			.then(() => {
-				const request = new Request(`${process.env.REACT_APP_API_URL}/`, {
-					method: "GET",
-					...options,
-				});
-				return fetch(request)
-					.then((response) => {
-						if (response.status < 200 || response.status >= 300) {
-							throw response;
-						}
+		if (response.status < 200 || response.status >= 300) {
+			throw response;
+		}
 
-						return response.json();
-					})
-					.then((user) => {
-						user.fullName =
-							(user.first_name || "") +
-							(user.first_name && user.last_name ? " " : "") +
-							(user.last_name || "");
-						user = JSON.stringify(user);
-						localStorage.setItem("deku-user", user);
-						return Promise.resolve();
-					})
-					.catch((error) => {
-						throw error;
-					});
-			})
-			.catch((error) => {
-				throw error;
-			});
+		const userResponse = await fetch(`${apiUrl}/`, {
+			method: "GET",
+			credentials: "include",
+			headers,
+		});
+
+		if (userResponse.status < 200 || userResponse.status >= 300) {
+			throw userResponse;
+		}
+
+		const user = await userResponse.json();
+		user.fullName = await getFullName(user);
+		localStorage.setItem("deku-user", JSON.stringify(user));
 	},
 
-	// called when the user attempts to sign up
-	signup: (data) => {
-		const request = new Request(`${process.env.REACT_APP_API_URL}/signup`, {
+	async signup(data) {
+		const response = await fetch(`${apiUrl}/signup`, {
 			method: "POST",
+			credentials: "include",
+			headers,
 			body: JSON.stringify(data),
-			...options,
 		});
-		return fetch(request)
-			.then((response) => {
-				if (response.status < 200 || response.status >= 300) {
-					throw response;
-				}
 
-				return response.text();
-			})
-			.then(() => {
-				return Promise.resolve();
-			})
-			.catch((error) => {
-				throw error;
-			});
+		if (response.status < 200 || response.status >= 300) {
+			throw response;
+		}
 	},
 
-	// called when the user clicks on the logout button
-	logout: () => {
+	logout() {
 		localStorage.removeItem("deku-user");
 		return Promise.resolve();
 	},
-	// called when the API returns an error
-	checkError: ({ status }) => {
+
+	checkError({ status }) {
 		if (status === 401 || status === 403) {
 			localStorage.removeItem("deku-user");
 			return Promise.reject();
 		}
+
 		return Promise.resolve();
 	},
-	// called when the user navigates to a new location, to check for authentication
-	checkAuth: () => {
+
+	checkAuth() {
 		return localStorage.getItem("deku-user")
 			? Promise.resolve()
 			: Promise.reject();
 	},
-	// called when the user navigates to a new location, to check for permissions / roles
-	getIdentity: () => {
-		const user = localStorage.getItem("deku-user");
-		return user ? Promise.resolve(JSON.parse(user)) : Promise.reject();
+
+	async getIdentity() {
+		const response = await fetch(`${apiUrl}/`, {
+			method: "GET",
+			credentials: "include",
+			headers,
+		});
+
+		if (response.status < 200 || response.status >= 300) {
+			throw response;
+		}
+
+		const user = await response.json();
+		user.fullName = await getFullName(user);
+		localStorage.setItem("deku-user", JSON.stringify(user));
+		return JSON.parse(localStorage.getItem("deku-user"));
 	},
-	getPermissions: () => {
+
+	getPermissions() {
 		const user = localStorage.getItem("deku-user");
-		return user
-			? Promise.resolve(JSON.parse(user).permission)
-			: Promise.reject();
+
+		if (!user) {
+			return Promise.reject();
+		}
+
+		return Promise.resolve(JSON.parse(user).permission);
 	},
 };

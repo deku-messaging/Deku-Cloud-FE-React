@@ -106,6 +106,13 @@ const RestProvider = {
 		}).then(({ json }) => ({ data: json }));
 	},
 	customRequest: (method, url, params) => {
+		if (params && params.headers) {
+			params.headers.forEach((header) => {
+				const key = Object.keys(header)[0];
+				const value = header[key];
+				options.headers.set(key, value);
+			});
+		}
 		const customOptions = {
 			method,
 			...params,

@@ -13,6 +13,7 @@ import {
 	PasswordInput,
 	useNotify,
 	useLogout,
+	Title,
 } from "react-admin";
 import {
 	Box,
@@ -28,7 +29,9 @@ import {
 } from "@mui/material";
 import FileCopyOutlinedIcon from "@mui/icons-material/FileCopyOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 import CloseIcon from "@mui/icons-material/Close";
 import { MuiTelInput } from "mui-tel-input";
 
@@ -138,6 +141,14 @@ export const Setting = () => {
 		twilioServiceSid: false,
 	});
 
+	const [showPassword, setShowPassword] = useState({
+		accountSid: false,
+		authToken: false,
+		twilioAccountSid: false,
+		twilioAuthToken: false,
+		twilioServiceSid: false,
+	});
+
 	useEffect(() => {
 		const fetchData = async () => {
 			try {
@@ -184,7 +195,7 @@ export const Setting = () => {
 				}
 
 				window.location.reload(true);
-			}, 2000);
+			}, 1000);
 			return;
 		} catch (error) {
 			notify("Oops! Something went wrong. Please again latter", {
@@ -200,7 +211,6 @@ export const Setting = () => {
 
 		const handleDelete = async (data) => {
 			try {
-				// console.log(data);
 				await RestProvider.customRequest("DELETE", "", {
 					body: JSON.stringify({
 						password: data.password,
@@ -303,218 +313,328 @@ export const Setting = () => {
 	};
 
 	return (
-		<Box margin="0.5em">
-			<RecordContextProvider key={userData.id} value={userData}>
-				<SimpleForm
-					toolbar={<SettingToolbar />}
-					onSubmit={onSubmit}
-					validate={validatePasswords}
-				>
-					<Box width={"100%"}>
-						<Typography variant="h6">Access Keys</Typography>
-						<Grid container spacing={2}>
-							<Grid item xs={12} sm={6}>
-								<TextInput
-									source="account_sid"
-									InputProps={{
-										endAdornment: (
-											<IconButton
-												onClick={() => {
-													navigator.clipboard.writeText(userData.account_sid);
-													setCopied((prevState) => ({
-														...prevState,
-														accountSid: true,
-													}));
-													setTimeout(() => {
-														setCopied((prevState) => ({
-															...prevState,
-															accountSid: false,
-														}));
-													}, 3000);
-												}}
-											>
-												{copied.accountSid ? (
-													<CheckCircleIcon color="success" />
-												) : (
-													<FileCopyOutlinedIcon />
-												)}
-											</IconButton>
-										),
-									}}
-									disabled
-									fullWidth
-								/>
+		<>
+			<Title title="Settings" />
+			<Box margin="0.5em">
+				<RecordContextProvider key={userData.id} value={userData}>
+					<SimpleForm
+						toolbar={<SettingToolbar />}
+						onSubmit={onSubmit}
+						validate={validatePasswords}
+					>
+						<Box width={"100%"}>
+							<Typography variant="h6">Access Keys</Typography>
+							<>
+								<Typography variant="body2">
+									<ReportProblemIcon color="warning" fontSize="small" /> Always
+									store your token securely to protect your account.
+								</Typography>
+							</>
+							<Grid container spacing={2}>
+								<Grid item xs={12} sm={6}>
+									<TextInput
+										source="account_sid"
+										InputProps={{
+											endAdornment: (
+												<>
+													<IconButton
+														onClick={() => {
+															setShowPassword((prevState) => ({
+																...prevState,
+																accountSid: !showPassword.accountSid,
+															}));
+														}}
+													>
+														{showPassword.accountSid ? (
+															<VisibilityOff />
+														) : (
+															<Visibility />
+														)}
+													</IconButton>
+													<IconButton
+														onClick={() => {
+															navigator.clipboard.writeText(
+																userData.account_sid
+															);
+															setCopied((prevState) => ({
+																...prevState,
+																accountSid: true,
+															}));
+															setTimeout(() => {
+																setCopied((prevState) => ({
+																	...prevState,
+																	accountSid: false,
+																}));
+															}, 3000);
+														}}
+													>
+														{copied.accountSid ? (
+															<CheckCircleIcon color="success" />
+														) : (
+															<FileCopyOutlinedIcon />
+														)}
+													</IconButton>
+												</>
+											),
+										}}
+										type={showPassword.accountSid ? "text" : "password"}
+										disabled
+										fullWidth
+									/>
+								</Grid>
+								<Grid item xs={12} sm={6}>
+									<TextInput
+										source="auth_token"
+										InputProps={{
+											endAdornment: (
+												<>
+													<IconButton
+														onClick={() => {
+															setShowPassword((prevState) => ({
+																...prevState,
+																authToken: !showPassword.authToken,
+															}));
+														}}
+													>
+														{showPassword.authToken ? (
+															<VisibilityOff />
+														) : (
+															<Visibility />
+														)}
+													</IconButton>
+													<IconButton
+														onClick={() => {
+															navigator.clipboard.writeText(
+																userData.auth_token
+															);
+															setCopied((prevState) => ({
+																...prevState,
+																authToken: true,
+															}));
+															setTimeout(() => {
+																setCopied((prevState) => ({
+																	...prevState,
+																	authToken: false,
+																}));
+															}, 3000);
+														}}
+													>
+														{copied.authToken ? (
+															<CheckCircleIcon color="success" />
+														) : (
+															<FileCopyOutlinedIcon />
+														)}
+													</IconButton>
+												</>
+											),
+										}}
+										type={showPassword.authToken ? "text" : "password"}
+										disabled
+										fullWidth
+									/>
+								</Grid>
 							</Grid>
-							<Grid item xs={12} sm={6}>
-								<TextInput
-									source="auth_token"
-									InputProps={{
-										endAdornment: (
-											<IconButton
-												onClick={() => {
-													navigator.clipboard.writeText(userData.auth_token);
-													setCopied((prevState) => ({
-														...prevState,
-														authToken: true,
-													}));
-													setTimeout(() => {
-														setCopied((prevState) => ({
-															...prevState,
-															authToken: false,
-														}));
-													}, 3000);
-												}}
-											>
-												{copied.authToken ? (
-													<CheckCircleIcon color="success" />
-												) : (
-													<FileCopyOutlinedIcon />
-												)}
-											</IconButton>
-										),
-									}}
-									disabled
-									fullWidth
-								/>
+							<Divider />
+							<Typography variant="h6">Twilio Keys</Typography>
+							<>
+								<Typography variant="body2">
+									<ReportProblemIcon color="warning" fontSize="small" /> Always
+									store your token securely to protect your account.
+								</Typography>
+							</>
+							<Grid container spacing={2}>
+								<Grid item xs={12} sm={6}>
+									<TextInput
+										source="twilio_account_sid"
+										InputProps={{
+											endAdornment: (
+												<>
+													<IconButton
+														onClick={() => {
+															setShowPassword((prevState) => ({
+																...prevState,
+																twilioAccountSid:
+																	!showPassword.twilioAccountSid,
+															}));
+														}}
+													>
+														{showPassword.twilioAccountSid ? (
+															<VisibilityOff />
+														) : (
+															<Visibility />
+														)}
+													</IconButton>
+													<IconButton
+														onClick={() => {
+															navigator.clipboard.writeText(
+																userData.twilio_account_sid
+															);
+															setCopied((prevState) => ({
+																...prevState,
+																twilioAccountSid: true,
+															}));
+															setTimeout(() => {
+																setCopied((prevState) => ({
+																	...prevState,
+																	twilioAccountSid: false,
+																}));
+															}, 3000);
+														}}
+													>
+														{copied.twilioAccountSid ? (
+															<CheckCircleIcon color="success" />
+														) : (
+															<FileCopyOutlinedIcon />
+														)}
+													</IconButton>
+												</>
+											),
+										}}
+										type={showPassword.twilioAccountSid ? "text" : "password"}
+										fullWidth
+									/>
+									<TextInput
+										source="twilio_auth_token"
+										InputProps={{
+											endAdornment: (
+												<>
+													<IconButton
+														onClick={() => {
+															setShowPassword((prevState) => ({
+																...prevState,
+																twilioAuthToken: !showPassword.twilioAuthToken,
+															}));
+														}}
+													>
+														{showPassword.twilioAuthToken ? (
+															<VisibilityOff />
+														) : (
+															<Visibility />
+														)}
+													</IconButton>
+													<IconButton
+														onClick={() => {
+															navigator.clipboard.writeText(
+																userData.twilio_auth_token
+															);
+															setCopied((prevState) => ({
+																...prevState,
+																twilioAuthToken: true,
+															}));
+															setTimeout(() => {
+																setCopied((prevState) => ({
+																	...prevState,
+																	twilioAuthToken: false,
+																}));
+															}, 3000);
+														}}
+													>
+														{copied.twilioAuthToken ? (
+															<CheckCircleIcon color="success" />
+														) : (
+															<FileCopyOutlinedIcon />
+														)}
+													</IconButton>
+												</>
+											),
+										}}
+										type={showPassword.twilioAuthToken ? "text" : "password"}
+										fullWidth
+									/>
+									<TextInput
+										source="twilio_service_sid"
+										InputProps={{
+											endAdornment: (
+												<>
+													<IconButton
+														onClick={() => {
+															setShowPassword((prevState) => ({
+																...prevState,
+																twilioServiceSid:
+																	!showPassword.twilioServiceSid,
+															}));
+														}}
+													>
+														{showPassword.twilioServiceSid ? (
+															<VisibilityOff />
+														) : (
+															<Visibility />
+														)}
+													</IconButton>
+													<IconButton
+														onClick={() => {
+															navigator.clipboard.writeText(
+																userData.twilio_service_sid
+															);
+															setCopied((prevState) => ({
+																...prevState,
+																twilioServiceSid: true,
+															}));
+															setTimeout(() => {
+																setCopied((prevState) => ({
+																	...prevState,
+																	twilioServiceSid: false,
+																}));
+															}, 3000);
+														}}
+													>
+														{copied.twilioServiceSid ? (
+															<CheckCircleIcon color="success" />
+														) : (
+															<FileCopyOutlinedIcon />
+														)}
+													</IconButton>
+												</>
+											),
+										}}
+										type={showPassword.twilioServiceSid ? "text" : "password"}
+										fullWidth
+									/>
+								</Grid>
 							</Grid>
-						</Grid>
-						<Divider />
-						<Typography variant="h6">Twilio Keys</Typography>
-						<Grid container spacing={2}>
-							<Grid item xs={12} sm={6}>
-								<TextInput
-									source="twilio_account_sid"
-									InputProps={{
-										endAdornment: (
-											<IconButton
-												onClick={() => {
-													navigator.clipboard.writeText(
-														userData.twilio_account_sid
-													);
-													setCopied((prevState) => ({
-														...prevState,
-														twilioAccountSid: true,
-													}));
-													setTimeout(() => {
-														setCopied((prevState) => ({
-															...prevState,
-															twilioAccountSid: false,
-														}));
-													}, 3000);
-												}}
-											>
-												{copied.twilioAccountSid ? (
-													<CheckCircleIcon color="success" />
-												) : (
-													<FileCopyOutlinedIcon />
-												)}
-											</IconButton>
-										),
-									}}
-									fullWidth
-								/>
-								<TextInput
-									source="twilio_auth_token"
-									InputProps={{
-										endAdornment: (
-											<IconButton
-												onClick={() => {
-													navigator.clipboard.writeText(
-														userData.twilio_auth_token
-													);
-													setCopied((prevState) => ({
-														...prevState,
-														twilioAuthToken: true,
-													}));
-													setTimeout(() => {
-														setCopied((prevState) => ({
-															...prevState,
-															twilioAuthToken: false,
-														}));
-													}, 3000);
-												}}
-											>
-												{copied.twilioAuthToken ? (
-													<CheckCircleIcon color="success" />
-												) : (
-													<FileCopyOutlinedIcon />
-												)}
-											</IconButton>
-										),
-									}}
-									fullWidth
-								/>
-								<TextInput
-									source="twilio_service_sid"
-									InputProps={{
-										endAdornment: (
-											<IconButton
-												onClick={() => {
-													navigator.clipboard.writeText(
-														userData.twilio_service_sid
-													);
-													setCopied((prevState) => ({
-														...prevState,
-														twilioServiceSid: true,
-													}));
-													setTimeout(() => {
-														setCopied((prevState) => ({
-															...prevState,
-															twilioServiceSid: false,
-														}));
-													}, 3000);
-												}}
-											>
-												{copied.twilioServiceSid ? (
-													<CheckCircleIcon color="success" />
-												) : (
-													<FileCopyOutlinedIcon />
-												)}
-											</IconButton>
-										),
-									}}
-									fullWidth
-								/>
+							<Divider />
+							<Typography variant="h6">Account Details</Typography>
+							<Grid container spacing={2}>
+								<Grid item xs={12} sm={6}>
+									<TextInput
+										validate={required()}
+										source="first_name"
+										fullWidth
+									/>
+									<TextInput source="last_name" fullWidth />
+									<PhoneNumberInput source="phone_number" />
+								</Grid>
+								<Grid item xs={12} sm={6}>
+									<TextInput label="ID" source="id" disabled fullWidth />
+									<TextInput label="Email" source="email" disabled fullWidth />
+									<DateTimeInput source="created_at" disabled fullWidth />
+								</Grid>
 							</Grid>
-						</Grid>
-						<Divider />
-						<Typography variant="h6">Account Details</Typography>
-						<Grid container spacing={2}>
-							<Grid item xs={12} sm={6}>
-								<TextInput
-									validate={required()}
-									source="first_name"
-									fullWidth
-								/>
-								<TextInput source="last_name" fullWidth />
-								<PhoneNumberInput source="phone_number" />
+							<Divider />
+							<Typography variant="h6">Update Password</Typography>
+							<Grid container spacing={2}>
+								<Grid item xs={12} sm={6}>
+									<PasswordInput source="password" fullWidth />
+								</Grid>
+								<Grid item xs={12} sm={6}>
+									<PasswordInput source="new_password" fullWidth />
+									<PasswordInput source="confirm_new_password" fullWidth />
+								</Grid>
 							</Grid>
-							<Grid item xs={12} sm={6}>
-								<TextInput label="ID" source="id" disabled fullWidth />
-								<TextInput label="Email" source="email" disabled fullWidth />
-								<DateTimeInput source="created_at" disabled fullWidth />
+							<Divider />
+							<Grid
+								container
+								justifyContent="center"
+								sx={{ marginTop: "50px" }}
+							>
+								<Grid item xs={12} sm={6} md={4}>
+									<DeleteUserButton />
+								</Grid>
 							</Grid>
-						</Grid>
-						<Divider />
-						<Typography variant="h6">Update Password</Typography>
-						<Grid container spacing={2}>
-							<Grid item xs={12} sm={6}>
-								<PasswordInput source="password" fullWidth />
-							</Grid>
-							<Grid item xs={12} sm={6}>
-								<PasswordInput source="new_password" fullWidth />
-								<PasswordInput source="confirm_new_password" fullWidth />
-							</Grid>
-						</Grid>
-						<Divider />
-						<Grid container justifyContent="center" sx={{ marginTop: "50px" }}>
-							<Grid item xs={12} sm={6} md={4}>
-								<DeleteUserButton />
-							</Grid>
-						</Grid>
-					</Box>
-				</SimpleForm>
-			</RecordContextProvider>
-		</Box>
+						</Box>
+					</SimpleForm>
+				</RecordContextProvider>
+			</Box>
+		</>
 	);
 };

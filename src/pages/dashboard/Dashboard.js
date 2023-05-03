@@ -5,7 +5,7 @@ import {
 	TextInput,
 	useInput,
 	useNotify,
-	useLogout,
+	useGetIdentity,
 	SimpleForm,
 	List,
 	Datagrid,
@@ -15,6 +15,9 @@ import {
 	useGetList,
 	Toolbar,
 	SaveButton,
+	ReferenceInput,
+	SelectInput,
+	useRefresh,
 } from "react-admin";
 import { groupBy } from "lodash";
 import { Box, Grid, Typography, CardContent, Card } from "@mui/material";
@@ -26,7 +29,61 @@ import DashboardShow from "./DashboardShow";
 
 const Dashboard = () => {
 	const notify = useNotify();
-	const logout = useLogout();
+	const { data: identity, isLoading: identityLoading } = useGetIdentity();
+	const refresh = useRefresh();
+
+	const validateFields = (values) => {
+		const errors = {};
+		if (!values.reference) {
+			errors.reference = "A project is required to publish";
+		}
+		if (!values.service) {
+			errors.service = "A service is required to publish";
+		}
+		if (!values.phone_number) {
+			errors.message = "A phone number is required to publish";
+		}
+		if (!values.message) {
+			errors.message = "A message is required to publish";
+		}
+		return errors;
+	};
+
+	const onSubmit = async (data) => {
+		try {
+			await RestProvider.customRequest(
+				"POST",
+				`projects/${data.reference}/services/${data.service}`,
+				{
+					headers: [
+						{
+							Authorization:
+								"Basic " +
+								btoa(identity.account_sid + ":" + identity.auth_token),
+						},
+					],
+					body: JSON.stringify({
+						to: data.phone_number,
+						body: data.message,
+					}),
+				}
+			);
+
+			notify("Successfully sent message", {
+				type: "success",
+				anchorOrigin: { vertical: "top", horizontal: "right" },
+			});
+			refresh();
+			return;
+		} catch (error) {
+			notify("Failed to send message. Check logs.", {
+				type: "error",
+				anchorOrigin: { vertical: "top", horizontal: "right" },
+			});
+			refresh();
+			return;
+		}
+	};
 
 	const SendToolbar = (props) => {
 		return (
@@ -36,12 +93,25 @@ const Dashboard = () => {
 		);
 	};
 
+	const ProjectsInput = () => (
+		<ReferenceInput reference="projects" source="reference">
+			<SelectInput
+				label="Project"
+				source="reference"
+				fullWidth
+				optionText="friendly_name"
+				optionValue="reference"
+			/>
+		</ReferenceInput>
+	);
+
 	const PhoneNumberInput = (props) => {
 		const { field } = useInput(props);
 
 		return (
 			<MuiTelInput
 				{...field}
+				margin="normal"
 				defaultCountry={"CM"}
 				label="Phone Number"
 				fullWidth
@@ -49,13 +119,14 @@ const Dashboard = () => {
 		);
 	};
 
-	const MessageInput = () => {
+	const MessageInput = (props) => {
 		const [message, setMessage] = useState("");
 		const handleInputChange = (event) => setMessage(event.target.value);
 
 		return (
 			<>
 				<TextInput
+					{...props}
 					source="message"
 					multiline
 					fullWidth
@@ -121,9 +192,6 @@ const Dashboard = () => {
 								"& .column-service_id": {
 									display: { xs: "none", md: "table-cell" },
 								},
-								"& .column-to": {
-									display: { xs: "none", md: "table-cell" },
-								},
 								"& .column-from_": {
 									display: { xs: "none", md: "table-cell" },
 								},
@@ -132,7 +200,6 @@ const Dashboard = () => {
 								},
 							}}
 						>
-							<TextField source="sid" />
 							<TextField source="service_id" />
 							<TextField source="to" />
 							<TextField source="from_" />
@@ -154,8 +221,21 @@ const Dashboard = () => {
 				</Grid>
 
 				<Grid item xs={12} sm={4}>
-					<SimpleForm toolbar={<SendToolbar />}>
+					<SimpleForm
+						toolbar={<SendToolbar />}
+						onSubmit={onSubmit}
+						validate={validateFields}
+					>
 						<Typography variant="p">Publish a message</Typography>
+						<ProjectsInput />
+						<SelectInput
+							source="service"
+							choices={[
+								{ id: "sms", name: "SMS" },
+								{ id: "notification", name: "Notification" },
+							]}
+							fullWidth
+						/>
 						<PhoneNumberInput source="phone_number" />
 						<MessageInput />
 					</SimpleForm>

@@ -34,11 +34,7 @@ const App = () => (
 			create={ProjectCreate}
 			icon={WorkIcon}
 		/>
-		<Resource
-			name="settings"
-			icon={SettingsIcon}
-			list={Setting}
-		/>
+		<Resource name="settings" icon={SettingsIcon} list={Setting} />
 	</Admin>
 );
 
