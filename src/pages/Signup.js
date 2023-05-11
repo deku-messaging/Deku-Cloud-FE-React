@@ -16,6 +16,8 @@ import {
 	CssBaseline,
 	TextField,
 	IconButton,
+	AppBar,
+	Toolbar,
 } from "@mui/material";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -181,6 +183,27 @@ const SignupPage = () => {
 
 	return (
 		<ThemeProvider theme={theme}>
+			<AppBar position="static">
+				<Toolbar>
+					<Grid container spacing={2} justifyContent="space-between">
+						<Grid item sx={{ display: "flex" }}>
+							<Avatar sx={{ m: 1, backgroundColor: "inherit" }}>
+								<img src="./favicon-32x32.png" alt="Logo" />
+							</Avatar>
+						</Grid>
+						<Grid item sx={{ display: "flex" }}>
+							<Button href="#/tutorial" color="inherit" size="medium">
+								Tutorial
+							</Button>
+						</Grid>
+						<Grid item sx={{ display: "flex" }}>
+							<Button href="#/login" color="inherit" size="medium">
+								Login
+							</Button>
+						</Grid>
+					</Grid>
+				</Toolbar>
+			</AppBar>
 			<Grid container component="main" sx={{ height: "100vh" }}>
 				<CssBaseline />
 				<Grid

@@ -9,6 +9,9 @@ import Typography from "@mui/material/Typography";
 import ImageList from "@mui/material/ImageList";
 import ImageListItem from "@mui/material/ImageListItem";
 import Grid from "@mui/material/Grid";
+import AppBar from "@mui/material/AppBar";
+import Toolbar from "@mui/material/Toolbar";
+import Avatar from "@mui/material/Avatar";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -194,6 +197,25 @@ const Tutorial = () => {
 
 	return (
 		<Box width={"100%"}>
+			<AppBar position="static">
+				<Toolbar>
+					<Grid container spacing={2} justifyContent="space-between">
+						<Grid item sx={{ display: "flex" }}>
+							<Avatar sx={{ m: 1, backgroundColor: "inherit" }}>
+								<img src="./favicon-32x32.png" alt="Logo" />
+							</Avatar>
+						</Grid>
+						<Grid item sx={{ display: "flex" }}>
+							<Button href="#/login" color="inherit" size="medium">
+								Login
+							</Button>
+							<Button href="#/signup" color="inherit" size="medium">
+								Sign Up
+							</Button>
+						</Grid>
+					</Grid>
+				</Toolbar>
+			</AppBar>
 			<Grid container spacing={2} p={3}>
 				<Grid item xs={12} sm={6} md={4} mt={5} mx={"auto"} textAlign="justify">
 					<Typography variant="h4" textAlign="center">
