@@ -128,6 +128,37 @@ const validatePasswords = async (values) => {
 	}
 };
 
+const validateTwilioKeys = (values) => {
+	const errors = {};
+	if (
+		values.twilio_account_sid ||
+		values.twilio_auth_token ||
+		values.twilio_service_sid
+	) {
+		if (!values.twilio_account_sid) {
+			errors.twilio_account_sid = `Please enter your twilio account_sid`;
+		} else if (!values.twilio_account_sid.startsWith("AC")) {
+			errors.twilio_account_sid = `The Account SID starts with "AC"`;
+		}
+		if (!values.twilio_auth_token) {
+			errors.twilio_auth_token = `Please enter your twilio auth_token`;
+		}
+		if (!values.twilio_service_sid) {
+			errors.twilio_service_sid = `Please enter your twilio messaging service_sid`;
+		} else if (!values.twilio_service_sid.startsWith("MG")) {
+			errors.twilio_service_sid = `The Messaging Service SID starts with "MG"`;
+		}
+	}
+	return errors;
+};
+
+const validator = async (values) => {
+	return {
+		...(await validatePasswords(values)),
+		...validateTwilioKeys(values),
+	};
+};
+
 export const Setting = () => {
 	const notify = useNotify();
 	const logout = useLogout();
@@ -320,7 +351,7 @@ export const Setting = () => {
 					<SimpleForm
 						toolbar={<SettingToolbar />}
 						onSubmit={onSubmit}
-						validate={validatePasswords}
+						validate={validator}
 					>
 						<Box width={"100%"}>
 							<Typography variant="h6">Access Keys</Typography>
