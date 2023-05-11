@@ -14,6 +14,7 @@ import { ProjectList, ProjectEdit, ProjectCreate } from "./pages/projects";
 import { Setting } from "./pages/Settings";
 
 import { Dashboard } from "./pages/dashboard";
+import Tutorial from "./pages/Tutorial";
 
 const App = () => (
 	<Admin
@@ -26,6 +27,7 @@ const App = () => (
 	>
 		<CustomRoutes noLayout>
 			<Route path="signup" element={<SignupPage />} />
+			<Route path="tutorial" element={<Tutorial />} />
 		</CustomRoutes>
 		<Resource
 			name="projects"
