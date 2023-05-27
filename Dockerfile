@@ -15,7 +15,7 @@ RUN apk add --no-cache \
 WORKDIR /app
 COPY . .
 # build production files
-ARG CLOUD_HOST
+ARG CLOUD_BE_REST_URL
 ARG SSL_ENABLE
 ARG SSL_CRT_FILE
 ARG SSL_KEY_FILE
