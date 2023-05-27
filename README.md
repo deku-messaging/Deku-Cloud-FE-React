@@ -1,4 +1,4 @@
-# Deku Web
+# Deku Cloud Front-End React
 ## Available Scripts
 
 In the project directory, you can run:
