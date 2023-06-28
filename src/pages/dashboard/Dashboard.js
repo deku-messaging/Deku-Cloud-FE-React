@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import {
 	TextInput,
 	useInput,
-	useNotify,
 	useGetIdentity,
 	SimpleForm,
 	List,
@@ -18,18 +17,35 @@ import {
 	ReferenceInput,
 	SelectInput,
 	useRefresh,
+	SimpleFormIterator,
+	ArrayInput,
+	FileInput,
+	FileField,
 } from "react-admin";
 import { groupBy } from "lodash";
-import { Box, Grid, Typography, CardContent, Card } from "@mui/material";
+import {
+	Button,
+	Box,
+	Grid,
+	Typography,
+	CardContent,
+	Card,
+} from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
+import AddIcon from "@mui/icons-material/Add";
 import { MuiTelInput } from "mui-tel-input";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import { RestProvider } from "../../dataProvider";
 import DashboardShow from "./DashboardShow";
 
 const Dashboard = () => {
-	const notify = useNotify();
-	const { data: identity, isLoading: identityLoading } = useGetIdentity();
+	const notify = (message, type) => {
+		toast[type](message);
+	};
+
+	const { data: identity } = useGetIdentity();
 	const refresh = useRefresh();
 
 	const validateFields = (values) => {
@@ -40,55 +56,134 @@ const Dashboard = () => {
 		if (!values.service) {
 			errors.service = "A service is required to publish";
 		}
-		if (!values.phone_number) {
-			errors.message = "A phone number is required to publish";
+		if (!values.csv && (!values.messages || values.messages.length === 0)) {
+			errors.messages =
+				"Either a file or at least one message is required to publish";
+			errors.csv =
+				"Either a file or at least one message is required to publish";
 		}
-		if (!values.message) {
-			errors.message = "A message is required to publish";
+		if (values.csv && !values.csv.src) {
+			errors.csv = "Invalid file source";
+		}
+		if (values.csv && values.csv.rawFile.type !== "text/csv") {
+			errors.csv = "Invalid file format. Only CSV files are allowed";
+		}
+		if (values.messages && values.messages.length > 0) {
+			const messageErrors = [];
+			values.messages.forEach((message, index) => {
+				const messageError = {};
+				if (!message.phone_number) {
+					messageError.phone_number = "A phone number is required";
+				}
+				if (!message.message) {
+					messageError.message = "A message is required";
+				}
+				messageErrors[index] = messageError;
+			});
+			if (messageErrors.length > 0) {
+				errors.messages = messageErrors;
+			}
 		}
 		return errors;
 	};
 
 	const onSubmit = async (data) => {
-		try {
-			await RestProvider.customRequest(
-				"POST",
-				`projects/${data.reference}/services/${data.service}`,
-				{
-					headers: [
-						{
+		// Check if CSV file is present
+		if (data.csv && data.csv.src) {
+			try {
+				let formData = new FormData();
+				formData.append("file", data.csv.rawFile);
+
+				const response = await RestProvider.customRequest(
+					"POST",
+					`projects/${data.reference}/services/${data.service}`,
+					{
+						headers: {
 							Authorization:
 								"Basic " +
 								btoa(identity.account_sid + ":" + identity.auth_token),
 						},
-					],
-					body: JSON.stringify({
-						to: data.phone_number,
-						body: data.message,
-					}),
-				}
-			);
 
-			notify("Successfully sent message", {
-				type: "success",
-				anchorOrigin: { vertical: "top", horizontal: "right" },
-			});
-			refresh();
-			return;
-		} catch (error) {
-			notify("Failed to send message. Check logs.", {
-				type: "error",
-				anchorOrigin: { vertical: "top", horizontal: "right" },
-			});
-			refresh();
-			return;
+						body: formData,
+					}
+				);
+
+				let result = response.data;
+
+				if (result.message) {
+					notify(result.message, "success");
+				}
+
+				if (result.errors.length > 0) {
+					result.errors.forEach((item) => {
+						notify(item, "error");
+					});
+				}
+
+				refresh();
+			} catch (error) {
+				notify("Failed to upload CSV file. Check logs.", "error");
+				refresh();
+			}
 		}
+
+		// Check if messages array is present
+		if (data.messages && data.messages.length > 0) {
+			try {
+				const response = await RestProvider.customRequest(
+					"POST",
+					`projects/${data.reference}/services/${data.service}`,
+					{
+						headers: {
+							"Authorization":
+								"Basic " +
+								btoa(identity.account_sid + ":" + identity.auth_token),
+							"Accept": "application/json",
+							"Content-Type": "application/json",
+						},
+
+						body: JSON.stringify(
+							data.messages.map(({ phone_number, message }) => {
+								return {
+									to: phone_number,
+									body: message,
+								};
+							})
+						),
+					}
+				);
+
+				let result = response.data;
+
+				if (result.message) {
+					notify(result.message, "success");
+				}
+
+				if (result.errors.length > 0) {
+					result.errors.forEach((item) => {
+						notify(item, "error");
+					});
+				}
+
+				refresh();
+			} catch (error) {
+				notify("Failed to send message. Check logs.", "error");
+				refresh();
+			}
+		}
+
+		return;
 	};
 
 	const SendToolbar = (props) => {
 		return (
 			<Toolbar {...props}>
-				<SaveButton label="Send" icon={<SendIcon />} color="info" fullWidth />
+				<SaveButton
+					label="Send"
+					icon={<SendIcon />}
+					color="primary"
+					fullWidth
+				/>
 			</Toolbar>
 		);
 	};
@@ -106,7 +201,11 @@ const Dashboard = () => {
 	);
 
 	const PhoneNumberInput = (props) => {
-		const { field } = useInput(props);
+		const {
+			field,
+			fieldState: { isTouched, invalid, error },
+			formState: { isSubmitted },
+		} = useInput(props);
 
 		return (
 			<MuiTelInput
@@ -114,6 +213,10 @@ const Dashboard = () => {
 				margin="normal"
 				defaultCountry={"CM"}
 				label="Phone Number"
+				error={(isTouched || isSubmitted) && invalid}
+				helperText={
+					(isTouched || isSubmitted) && invalid ? error.message.message : ""
+				}
 				fullWidth
 			/>
 		);
@@ -127,7 +230,6 @@ const Dashboard = () => {
 			<>
 				<TextInput
 					{...props}
-					source="message"
 					multiline
 					fullWidth
 					inputProps={{ style: { minHeight: 200 } }}
@@ -140,7 +242,7 @@ const Dashboard = () => {
 
 	const Logs = () => {
 		const [logs, setLogs] = useState([]);
-		const { data, ids } = useGetList("logs", {
+		const { data } = useGetList("logs", {
 			perPage: 1000,
 			sort: { field: "created_at", order: "DESC" },
 		});
@@ -216,6 +318,16 @@ const Dashboard = () => {
 	return (
 		<Box margin="0.5em">
 			<Grid container spacing={2}>
+				<ToastContainer
+					position="top-center"
+					autoClose={30000}
+					hideProgressBar={false}
+					closeOnClick={true}
+					pauseOnHover={true}
+					progress={undefined}
+					style={{ width: "80%", marginTop: "60px" }}
+				/>
+
 				<Grid item xs={12} sm={8}>
 					<Logs resource={"logs"} />
 				</Grid>
@@ -236,8 +348,26 @@ const Dashboard = () => {
 							]}
 							fullWidth
 						/>
-						<PhoneNumberInput source="phone_number" />
-						<MessageInput />
+						<FileInput source="csv" accept=".csv" label="File">
+							<FileField source="src" title="title" />
+						</FileInput>
+						<ArrayInput source="messages">
+							<SimpleFormIterator
+								addButton={
+									<Button
+										variant="contained"
+										color="primary"
+										startIcon={<AddIcon />}
+									>
+										Add Message
+									</Button>
+								}
+								inline
+							>
+								<PhoneNumberInput source="phone_number" />
+								<MessageInput source="message" />
+							</SimpleFormIterator>
+						</ArrayInput>
 					</SimpleForm>
 				</Grid>
 			</Grid>

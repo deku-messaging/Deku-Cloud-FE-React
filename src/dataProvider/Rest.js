@@ -107,17 +107,16 @@ const RestProvider = {
 	},
 	customRequest: (method, url, params) => {
 		if (params && params.headers) {
-			params.headers.forEach((header) => {
-				const key = Object.keys(header)[0];
-				const value = header[key];
-				options.headers.set(key, value);
-			});
+			params.headers = new Headers(params.headers);
+		} else {
+			params.headers = options.headers;
 		}
+
 		const customOptions = {
 			method,
 			...params,
-			...options,
 		};
+
 		return httpClient(`${apiUrl}/${url}`, customOptions).then(({ json }) => ({
 			data: json,
 		}));
