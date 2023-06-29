@@ -106,10 +106,13 @@ const RestProvider = {
 		}).then(({ json }) => ({ data: json }));
 	},
 	customRequest: (method, url, params) => {
-		if (params && params.headers) {
-			params.headers = new Headers(params.headers);
+		if (params) {
+			if (params.headers) {
+				params.headers = new Headers(params.headers);
+			}
+			params = { ...options, ...params };
 		} else {
-			params.headers = options.headers;
+			params = { ...options };
 		}
 
 		const customOptions = {
