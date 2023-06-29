@@ -114,6 +114,12 @@ const Dashboard = () => {
 					notify(result.message, "success");
 				}
 
+				if (result.warnings.length > 0) {
+					result.warnings.forEach((item) => {
+						notify(item, "warning");
+					});
+				}
+
 				if (result.errors.length > 0) {
 					result.errors.forEach((item) => {
 						notify(item, "error");
@@ -157,6 +163,12 @@ const Dashboard = () => {
 
 				if (result.message) {
 					notify(result.message, "success");
+				}
+
+				if (result.warnings.length > 0) {
+					result.warnings.forEach((item) => {
+						notify(item, "warning");
+					});
 				}
 
 				if (result.errors.length > 0) {
@@ -320,7 +332,7 @@ const Dashboard = () => {
 			<Grid container spacing={2}>
 				<ToastContainer
 					position="top-center"
-					autoClose={30000}
+					autoClose={60000}
 					hideProgressBar={false}
 					closeOnClick={true}
 					pauseOnHover={true}
