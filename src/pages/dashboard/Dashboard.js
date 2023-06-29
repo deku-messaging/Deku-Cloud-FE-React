@@ -10,7 +10,6 @@ import {
 	Datagrid,
 	TextField,
 	DateField,
-	DeleteWithConfirmButton,
 	useGetList,
 	Toolbar,
 	SaveButton,
@@ -297,11 +296,23 @@ const Dashboard = () => {
 						sort={{ field: "created_at", order: "DESC" }}
 						resource="logs"
 						title={"Dashboard"}
+						filters={[
+							<TextInput label="ID" source="id" />,
+							<TextInput label="Recipient" source="to" />,
+							<SelectInput
+								choices={statusCounts.map((statusCount) => {
+									return { id: statusCount.status, name: statusCount.status };
+								})}
+								label="Status"
+								source="status"
+							/>,
+						]}
 					>
 						<Datagrid
 							rowClick="expand"
 							expand={<DashboardShow />}
 							expandSingle
+							bulkActionButtons={false}
 							sx={{
 								"& .column-service_id": {
 									display: { xs: "none", md: "table-cell" },
@@ -314,12 +325,11 @@ const Dashboard = () => {
 								},
 							}}
 						>
+							<TextField source="id" />
 							<TextField source="service_id" />
 							<TextField source="to" />
-							<TextField source="from_" />
 							<TextField source="status" />
 							<DateField source="created_at" showTime />
-							<DeleteWithConfirmButton redirect={"/"} />
 						</Datagrid>
 					</List>
 				</Grid>
